@@ -12,7 +12,7 @@ license-files = ["LICENSE"]
 authors = [
     { name = "Théo BRILLAND", email = "theo.brilland@wattswater.com" },
 ]
-keywords = ["gkp", "watts", "radiator", "thermostat", "home automation", "iot"]
+keywords = ["gkp", "radiator", "thermostat", "home automation", "iot"]
 classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
