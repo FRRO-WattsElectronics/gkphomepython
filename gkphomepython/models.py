@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -151,12 +152,10 @@ class Thermostat:
             raw = _as_int(value(watts_type))
             return None if raw is None else deci_fahrenheit_to_celsius(raw)
 
-        raw_mode = _as_int(value("Cm"))
-        mode = (
-            GkpMode(raw_mode)
-            if raw_mode is not None and raw_mode in GkpMode._value2member_map_
-            else None
-        )
+        mode: GkpMode | None = None
+        if (raw_mode := _as_int(value("Cm"))) is not None:
+            with suppress(ValueError):
+                mode = GkpMode(raw_mode)
         device_date = _parse_device_date(value("Dd"), value("Lo"))
         firmware_version = value("Sv")
         device_type = value("Ty")

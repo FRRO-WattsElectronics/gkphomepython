@@ -20,7 +20,7 @@ from gkphomepython import (
     Thermostat,
 )
 
-from .conftest import ACCESS_TOKEN, USER_ID, FakeApi, load_fixture
+from .common import ACCESS_TOKEN, USER_ID, FakeApi, load_fixture
 
 INSTALLATIONS_PATH = f"/businessmodule/v1/installations/admins/{USER_ID}"
 CONTENT_PATH = "/iotmanagement/v1/configuration/AABBCCDDEE01/AABBCCDDEE01/v1/content/"

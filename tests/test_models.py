@@ -11,7 +11,7 @@ from gkphomepython.models import (
     deci_fahrenheit_to_celsius,
 )
 
-from .conftest import load_fixture
+from .common import load_fixture
 
 
 @pytest.mark.parametrize(

@@ -8,7 +8,7 @@ from yarl import URL
 
 from gkphomepython import GkpAuth, GkpAuthError, GkpConnectionError
 
-from .conftest import ACCESS_TOKEN, USER_ID, FakeOAuthSession
+from .common import ACCESS_TOKEN, USER_ID, FakeOAuthSession
 
 
 def test_extract_user_id_from_token() -> None:
