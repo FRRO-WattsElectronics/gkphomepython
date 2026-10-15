@@ -79,6 +79,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Move the online detection and the firmware timings to the library
 - Always provide a delay when the API rate limits the user
 - Add `GkpRateLimitError`
+- Raise `GkpRateLimitError` instead of `GkpAuthError` when the APIM quota is exceeded (403 with `Retry-After`)
 - Use the Home Assistant APIM subscription key
 
 ### 0.1.0 (2026-09-30)
