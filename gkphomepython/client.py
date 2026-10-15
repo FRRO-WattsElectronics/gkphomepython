@@ -101,15 +101,19 @@ class GkpClient:
                 f"Request timed out after {self._timeout.total}s"
             ) from err
         except aiohttp.ClientResponseError as err:
-            if err.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
-                raise GkpAuthError(f"Access denied: {err}") from err
-            if err.status == HTTPStatus.NOT_FOUND:
-                raise GkpDeviceError(f"Resource not found: {endpoint}") from err
-            if err.status == HTTPStatus.TOO_MANY_REQUESTS:
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS or (
+                # APIM answers an exceeded quota with a 403 and a Retry-After
+                err.status == HTTPStatus.FORBIDDEN
+                and "Retry-After" in (err.headers or {})
+            ):
                 retry_after = _parse_retry_after(err.headers)
                 raise GkpRateLimitError(
                     f"Rate limited, retry after {retry_after}s", retry_after
                 ) from err
+            if err.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
+                raise GkpAuthError(f"Access denied: {err}") from err
+            if err.status == HTTPStatus.NOT_FOUND:
+                raise GkpDeviceError(f"Resource not found: {endpoint}") from err
             raise GkpError(f"API request failed: {err}") from err
         except aiohttp.ClientError as err:
             raise GkpConnectionError(f"Connection error: {err}") from err

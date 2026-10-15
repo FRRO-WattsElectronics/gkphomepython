@@ -253,23 +253,28 @@ async def test_connection_error(
 
 
 @pytest.mark.parametrize(
-    ("headers", "retry_after"),
+    ("status", "headers", "retry_after"),
     [
-        pytest.param({"Retry-After": "30"}, 30, id="seconds"),
-        pytest.param({}, 60, id="missing"),
+        pytest.param(429, {"Retry-After": "30"}, 30, id="seconds"),
+        pytest.param(429, {}, 60, id="missing"),
         pytest.param(
-            {"Retry-After": "Wed, 30 Sep 2026 15:00:00 GMT"}, 60, id="http_date"
+            429,
+            {"Retry-After": "Wed, 30 Sep 2026 15:00:00 GMT"},
+            60,
+            id="http_date",
         ),
+        pytest.param(403, {"Retry-After": "3600"}, 3600, id="quota_exceeded"),
     ],
 )
 async def test_rate_limited(
     client: GkpClient,
     fake_api: FakeApi,
+    status: int,
     headers: dict[str, str],
     retry_after: int,
 ) -> None:
-    """Test a 429 exposes the delay requested by the API, without retrying."""
-    fake_api.add("GET", CONTENT_PATH, status=429, headers=headers)
+    """Test a rate limit exposes the delay requested by the API, without retrying."""
+    fake_api.add("GET", CONTENT_PATH, status=status, headers=headers)
 
     with pytest.raises(GkpRateLimitError) as err:
         await client.get_device_content("AABBCCDDEE01")
