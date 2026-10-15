@@ -32,7 +32,8 @@ installations = await client.get_installations()
 for installation in installations:
     await client.notify_user_connected(installation.installation_id)
 
-thermostats = await client.get_thermostats(installations)
+result = await client.get_thermostats(installations)
+# result.thermostats: Thermostat by device ID, result.errors: GkpError by device ID
 
 await client.set_mode(device_id, GkpMode.COMFORT)
 await client.set_temperature(device_id, GkpMode.COMFORT, 21.5)
@@ -73,6 +74,12 @@ uv venv .venv && uv pip install --python .venv/bin/python -e ".[dev]"
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### 0.3.0 (2026-10-15)
+- `get_thermostats` returns a `ThermostatsResult`, with the thermostats and the device errors apart
+- `get_thermostats` raises `GkpAuthError` and `GkpRateLimitError`, which affect the whole account
+- Add `GkpMode.setpoint_adjustable`
+- Export `BOOST_DURATION_MIN` and `BOOST_DURATION_MAX`
 
 ### 0.2.0 (2026-10-01)
 - Add `get_thermostats` to read every thermostat of the installations

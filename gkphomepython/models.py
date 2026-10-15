@@ -17,6 +17,7 @@ from .const import (
     TEMP_ERR,
     GkpMode,
 )
+from .exceptions import GkpError
 
 
 def deci_fahrenheit_to_celsius(value: int) -> float | None:
@@ -179,3 +180,12 @@ class Thermostat:
             firmware_version=str(firmware_version) if firmware_version else None,
             device_type=str(device_type) if device_type else None,
         )
+
+
+@dataclass
+class ThermostatsResult:
+    """State of the thermostats of several installations."""
+
+    thermostats: dict[str, Thermostat] = field(default_factory=dict)
+    errors: dict[str, GkpError] = field(default_factory=dict)
+    """Error of each device that could not be read."""

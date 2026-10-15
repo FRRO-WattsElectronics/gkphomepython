@@ -45,6 +45,14 @@ class GkpMode(IntEnum):
     DEFROST = 4
     BOOST = 5
 
+    @property
+    def setpoint_adjustable(self) -> bool:
+        """Return True if the setpoint can be changed in this mode.
+
+        In AUTO mode, changing the setpoint starts a boost.
+        """
+        return self in (GkpMode.ECO, GkpMode.COMFORT, GkpMode.BOOST, GkpMode.AUTO)
+
 
 # Watts types holding the setpoint of each mode
 MODE_SETPOINT_KEY: dict[GkpMode, str] = {

@@ -35,7 +35,12 @@ from .exceptions import (
     GkpRateLimitError,
     GkpTimeoutError,
 )
-from .models import Installation, Thermostat, celsius_to_deci_fahrenheit
+from .models import (
+    Installation,
+    Thermostat,
+    ThermostatsResult,
+    celsius_to_deci_fahrenheit,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,11 +156,12 @@ class GkpClient:
 
     async def get_thermostats(
         self, installations: Iterable[Installation]
-    ) -> dict[str, Thermostat | GkpError]:
+    ) -> ThermostatsResult:
         """Get the state of every thermostat of the installations.
 
-        Errors are returned per device, so a failing device does not hide the
-        others. Unexpected errors are raised.
+        Device errors are returned per device, so a failing device does not hide
+        the others. Authentication and rate limit errors affect the whole account,
+        so they are raised, like unexpected errors.
         """
         devices = [
             (device_id, installation)
@@ -168,17 +174,22 @@ class GkpClient:
             async with semaphore:
                 return await self.get_thermostat(device_id, installation)
 
-        results = await asyncio.gather(
+        outcomes = await asyncio.gather(
             *(fetch(device_id, installation) for device_id, installation in devices),
             return_exceptions=True,
         )
 
-        thermostats: dict[str, Thermostat | GkpError] = {}
-        for (device_id, _), result in zip(devices, results, strict=True):
-            if not isinstance(result, Thermostat | GkpError):
-                raise result
-            thermostats[device_id] = result
-        return thermostats
+        result = ThermostatsResult()
+        for (device_id, _), outcome in zip(devices, outcomes, strict=True):
+            if isinstance(outcome, Thermostat):
+                result.thermostats[device_id] = outcome
+            elif isinstance(outcome, GkpError) and not isinstance(
+                outcome, GkpAuthError | GkpRateLimitError
+            ):
+                result.errors[device_id] = outcome
+            else:
+                raise outcome
+        return result
 
     async def notify_user_connected(self, installation_id: str) -> None:
         """Ask all devices of an installation to report their current state."""
@@ -223,7 +234,7 @@ class GkpClient:
         if current_mode is GkpMode.AUTO:
             await self.activate_boost(device_id, temperature)
             return
-        if current_mode not in (GkpMode.ECO, GkpMode.COMFORT, GkpMode.BOOST):
+        if not current_mode.setpoint_adjustable:
             raise GkpDeviceError(
                 f"Setpoint cannot be changed in {current_mode.name} mode"
             )

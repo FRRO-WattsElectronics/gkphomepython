@@ -3,6 +3,8 @@
 from .auth import GkpAuth
 from .client import GkpClient
 from .const import (
+    BOOST_DURATION_MAX,
+    BOOST_DURATION_MIN,
     SETPOINT_MAX,
     SETPOINT_MIN,
     USER_CONNECTED_INTERVAL,
@@ -17,11 +19,13 @@ from .exceptions import (
     GkpRateLimitError,
     GkpTimeoutError,
 )
-from .models import Installation, Thermostat
+from .models import Installation, Thermostat, ThermostatsResult
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
+    "BOOST_DURATION_MAX",
+    "BOOST_DURATION_MIN",
     "SETPOINT_MAX",
     "SETPOINT_MIN",
     "USER_CONNECTED_INTERVAL",
@@ -37,4 +41,5 @@ __all__ = [
     "GkpTimeoutError",
     "Installation",
     "Thermostat",
+    "ThermostatsResult",
 ]

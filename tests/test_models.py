@@ -181,3 +181,19 @@ def test_is_online_without_update(installation: Installation) -> None:
     thermostat = Thermostat.from_content("AABBCCDDEE01", installation, {})
 
     assert not thermostat.is_online(datetime.now(UTC))
+
+
+@pytest.mark.parametrize(
+    ("mode", "adjustable"),
+    [
+        pytest.param(GkpMode.OFF, False, id="off"),
+        pytest.param(GkpMode.ECO, True, id="eco"),
+        pytest.param(GkpMode.AUTO, True, id="auto"),
+        pytest.param(GkpMode.COMFORT, True, id="comfort"),
+        pytest.param(GkpMode.DEFROST, False, id="defrost"),
+        pytest.param(GkpMode.BOOST, True, id="boost"),
+    ],
+)
+def test_setpoint_adjustable(mode: GkpMode, adjustable: bool) -> None:
+    """Test in which modes the setpoint can be changed."""
+    assert mode.setpoint_adjustable is adjustable

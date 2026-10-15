@@ -24,6 +24,7 @@ from .common import ACCESS_TOKEN, USER_ID, FakeApi, load_fixture
 
 INSTALLATIONS_PATH = f"/businessmodule/v1/installations/admins/{USER_ID}"
 CONTENT_PATH = "/iotmanagement/v1/configuration/AABBCCDDEE01/AABBCCDDEE01/v1/content/"
+CONTENT_PATH_2 = "/iotmanagement/v1/configuration/AABBCCDDEE02/AABBCCDDEE02/v1/content/"
 CONFIG_PATH = "/iotmanagement/v1/devices/twin/properties/config/replace"
 USER_CONNECTED_PATH = "/iotmanagement/v1/devices/userconnected"
 
@@ -289,17 +290,37 @@ async def test_get_thermostats(
 ) -> None:
     """Test all thermostats are read, with an error per failing device."""
     fake_api.add("GET", CONTENT_PATH, load_fixture("device_content.json"))
-    fake_api.add(
-        "GET",
-        "/iotmanagement/v1/configuration/AABBCCDDEE02/AABBCCDDEE02/v1/content/",
-        status=404,
-    )
+    fake_api.add("GET", CONTENT_PATH_2, status=404)
 
-    results = await client.get_thermostats([installation])
+    result = await client.get_thermostats([installation])
 
-    assert list(results) == ["AABBCCDDEE01", "AABBCCDDEE02"]
-    assert isinstance(results["AABBCCDDEE01"], Thermostat)
-    assert isinstance(results["AABBCCDDEE02"], GkpDeviceError)
+    assert list(result.thermostats) == ["AABBCCDDEE01"]
+    assert isinstance(result.thermostats["AABBCCDDEE01"], Thermostat)
+    assert list(result.errors) == ["AABBCCDDEE02"]
+    assert isinstance(result.errors["AABBCCDDEE02"], GkpDeviceError)
+
+
+@pytest.mark.parametrize(
+    ("status", "headers", "error"),
+    [
+        pytest.param(401, {}, GkpAuthError, id="auth"),
+        pytest.param(429, {"Retry-After": "30"}, GkpRateLimitError, id="rate_limited"),
+    ],
+)
+async def test_get_thermostats_account_error(
+    client: GkpClient,
+    fake_api: FakeApi,
+    installation: Installation,
+    status: int,
+    headers: dict[str, str],
+    error: type[GkpError],
+) -> None:
+    """Test errors affecting the whole account are raised."""
+    fake_api.add("GET", CONTENT_PATH, load_fixture("device_content.json"))
+    fake_api.add("GET", CONTENT_PATH_2, status=status, headers=headers)
+
+    with pytest.raises(error):
+        await client.get_thermostats([installation])
 
 
 async def test_get_thermostats_unexpected_error(
